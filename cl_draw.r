@@ -1,6 +1,3 @@
-rm(list=ls())
-
-# global variables -------------------------
 # away teams = winners, put them in the correct order (group A, group B, group C, ...)
 # home teams = runners up, in correct order
 awayteams <- c("atletico", "real",  "monaco",    "dortmund","munchen","barcelona", "chelsea", "porto")  
@@ -23,6 +20,8 @@ constraints2[4,] <- c("city","chelsea")
 constraints2[5,] <- c("psg","monaco")
 constraints2[6,] <- c("schalke","dortmund")
 constraints2[7,] <- c("schalke","munchen")
+
+# for every new season, just change the home and away teams above and put in the constraints, and that should do the trick
 
 constraints <- rbind(constraints1,constraints2)
 
