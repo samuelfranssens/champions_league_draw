@@ -12,7 +12,7 @@ constraints1[,1] <- hometeams
 constraints1[,2] <- awayteams
 
 # constraints2 = teams from same country
-constraints2 <- matrix(data=NA,nrow=7,ncol=2) 
+constraints2 <- matrix(data=NA,nrow=7,ncol=2)   # adjust ncol to the amount of constraints you put in below
 constraints2[1,] <- c("leverkusen","dortmund")
 constraints2[2,] <- c("leverkusen","munchen")
 constraints2[3,] <- c("arsenal","chelsea")
@@ -44,23 +44,25 @@ lastconstraintcolumn  <- nrgames*2 + amountofconstraints
 
 
 # dataset for draw is created, begin the draw -----------------------------
-while (k < simulations+1) { # start a loop
-  # One simulation = One unconstrained draw (i.e., could include games that are disallowed)
-  # Draw 8 home teams, draw 8 away teams, and then put in zero's that will be replaced soon
-  draw[k,] <- c(sample(hometeams,nrgames,replace=F),sample(awayteams,nrgames,replace=F),numeric(amountofconstraints+nrgames))
-  violation_already <- 0 # Later we will go through each of the constraints. As soon as one is violated, the draw should be dismissed to reduce computation time.
 
-  for (j in 1:amountofconstraints) {  # go through each constraint
-    if (violation_already == 0) {     # as long as there is not already a violation 
-      for (i in 1:nrgames){     # go through each game in the draw
-        if (draw[k,i] == constraints[j,1] & draw[k,i+nrgames] == constraints[j,2]) # check whether a game is disallowed
-          {
-          draw[k,nrgames*2+j] <- 1 # if constraint j is violated
-          violation_already <- 1
-          } 
-        }
+while (k < simulations+1) { # start simulation
+# One simulation = One unconstrained draw (i.e., could include games that are disallowed)
+# Draw 8 home teams, draw 8 away teams, and then put in zero's that will be replaced soon
+draw[k,] <- c(sample(hometeams,nrgames,replace=F),sample(awayteams,nrgames,replace=F),numeric(amountofconstraints+nrgames))
+violation_already <- 0 # Later we will go through each of the constraints. As soon as one is violated, the draw should be dismissed to reduce computation time.
+
+for (j in 1:amountofconstraints) 
+  {  # go through each constraint
+  if (violation_already == 0) {     # as long as there is not already a violation 
+    for (i in 1:nrgames){     # go through each game in the draw
+      if (draw[k,i] == constraints[j,1] & draw[k,i+nrgames] == constraints[j,2]) # check whether a game is disallowed
+        {
+        draw[k,nrgames*2+j] <- 1 # if constraint j is violated
+        violation_already <- 1
+        } 
       }
     }
+  }
 
 for (l in 1:nrgames)  {                               # go through each home team and check who is the opponent
  opponent <- which(draw[k,]==hometeams[l]) + nrgames  # who is home team l's opponent?
@@ -71,8 +73,8 @@ for (l in 1:nrgames)  {                               # go through each home tea
 violations <- sum(as.numeric(draw[k,firstconstraintcolumn:lastconstraintcolumn])) # any violations?
 if(violations==0){k <- k+1} # only if no violations, go on with next simulation
 totalamountofsimulations <- totalamountofsimulations + 1 # keep track of how many good+bad simulations are necessary to get the desired amount of good simulations
-}
 
+}
 
 # simulation done. get probabilities now ----------------------------------
 probabilities <- matrix(data=NA,nrow=nrgames,ncol=nrgames)
