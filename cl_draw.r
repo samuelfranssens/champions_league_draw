@@ -41,9 +41,11 @@ draw <- matrix (data=NA,nrow=simulations,ncol=nrgames*2+amountofconstraints+nrga
 # column 9 = away team for game 1, column 10 = away team for game 2, ...
 # column 17 checks whether constraint 1 is violated in any of the games, column 18 checks ... constraint 2 ..., ...
 # the last 8 columns give the opponent for hometeam1 = juventus, opponent for hometeam2 = basel, ...
+colnames(draw) <- c( paste( rep("game",16), c(seq(1:nrgames),seq(1:nrgames)), c(rep("_home_team",8),rep("_away_team",8) ),sep="") , paste("constraint",seq(1:amountofconstraints),sep="") , paste(hometeams,"_opponent",sep=""))
 
 firstconstraintcolumn <- nrgames*2+1                        # in this particular case this is: 8*2+1  = 17
 lastconstraintcolumn  <- nrgames*2 + amountofconstraints    # in this particular case this is: 8*2+15 = 31
+
 
 # dataset for draw is created, begin the draw -----------------------------
 while (k < simulations+1) { # start simulation
@@ -65,11 +67,6 @@ while (k < simulations+1) { # start simulation
     }
   }
   
-  for (l in 1:nrgames)  {                               # go through each home team and check who is the opponent
-    opponent <- which(draw[k,]==hometeams[l]) + nrgames  # in which column can I find hometeam l's opponent
-    correctcolumn <- nrgames*2+amountofconstraints+l     # in which column should I put hometeam l's opponent
-    draw[k,correctcolumn] <- draw[k,opponent]            # put hometeam l's opponent in the correct column
-  }
   
   violations <- sum(as.numeric(draw[k,firstconstraintcolumn:lastconstraintcolumn])) # any violations?
   if(violations==0){k <- k+1} # only if no violations, go on with next simulation ; if violation, redo k
@@ -77,7 +74,18 @@ while (k < simulations+1) { # start simulation
   
 }
 
-# simulation done. get probabilities now ----------------------------------
+# By now we have a dataset with 8 games in it that do not violate any constraints.
+# Now we concentrate on the last 8 columns: For each draw, who is the opponent of hometeam1, who is the opponent of hometeam2, ...
+
+for (k in 1:simulations) {
+  for (l in 1:nrgames)  {                                # go through each home team and check who is the opponent
+    opponent <- which(draw[k,]==hometeams[l]) + nrgames  # in which column can I find hometeam l's opponent
+    correctcolumn <- nrgames*2+amountofconstraints+l     # in which column should I put hometeam l's opponent
+    draw[k,correctcolumn] <- draw[k,opponent]            # put hometeam l's opponent in the correct column
+  }
+}
+
+# Get probabilities now: For each hometeam, how many times was opponent A drawn, how many times was opponent B drawn, ... 
 probabilities <- matrix(data=NA,nrow=nrgames,ncol=nrgames)
 
 for (i in 1:nrgames)   # for each home team
