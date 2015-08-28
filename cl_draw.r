@@ -1,6 +1,18 @@
 # check out the infographic that Arsenal F.C. made for this: 
 # https://twitter.com/Arsenal/status/544437197714501632
 
+# The CL draw works as follows:
+# The runner-up from each group will be drawn against a winner from another group.
+# There are two constraints, however:
+# 1. teams from the same group   cannot be drawn against eachother.
+# 2. teams from the same country cannot be drawn against eachother.
+#
+# I feel it's much easier to first perform draws as if there are no constraints 
+# and afterwards eliminate the draws that violate constraints.
+# This will give a desired number of draws that do not violate constraints.
+# We can then see how many times each team is drawn against each opponent.
+
+
 
 # away teams = winners, put them in the correct order (group A, group B, group C, ...)
 # home teams = runners up, in correct order
