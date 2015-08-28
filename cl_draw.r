@@ -1,3 +1,7 @@
+# check out the infographic that Arsenal F.C. made for this: 
+# https://twitter.com/Arsenal/status/544437197714501632
+
+
 # away teams = winners, put them in the correct order (group A, group B, group C, ...)
 # home teams = runners up, in correct order
 awayteams <- c("atletico", "real",  "monaco",    "dortmund","munchen","barcelona", "chelsea", "porto")  
@@ -23,9 +27,8 @@ constraints2[7,] <- c("schalke","munchen")
 
 # for every new season, just change the home and away teams above and put in the constraints, and that should do the trick
 
-constraints <- rbind(constraints1,constraints2)
-
-amountofconstraints <- nrow(constraints) # create a variable with the amount of constraints
+constraints <- rbind(constraints1,constraints2) # put the constraints together in 1 dataframe
+amountofconstraints <- nrow(constraints)        # create a variable with the amount of constraints
 
 # constraints are set, begin the simulation -------------------------------
 k = 1
@@ -39,41 +42,39 @@ draw <- matrix (data=NA,nrow=simulations,ncol=nrgames*2+amountofconstraints+nrga
 # column 17 checks whether constraint 1 is violated in any of the games, column 18 checks ... constraint 2 ..., ...
 # the last 8 columns give the opponent for hometeam1 = juventus, opponent for hometeam2 = basel, ...
 
-firstconstraintcolumn <- nrgames*2+1
-lastconstraintcolumn  <- nrgames*2 + amountofconstraints
-
+firstconstraintcolumn <- nrgames*2+1                        # in this particular case this is: 8*2+1  = 17
+lastconstraintcolumn  <- nrgames*2 + amountofconstraints    # in this particular case this is: 8*2+15 = 31
 
 # dataset for draw is created, begin the draw -----------------------------
-
 while (k < simulations+1) { # start simulation
-# One simulation = One unconstrained draw (i.e., could include games that are disallowed)
-# Draw 8 home teams, draw 8 away teams, and then put in zero's that will be replaced soon
-draw[k,] <- c(sample(hometeams,nrgames,replace=F),sample(awayteams,nrgames,replace=F),numeric(amountofconstraints+nrgames))
-violation_already <- 0 # Later we will go through each of the constraints. As soon as one is violated, the draw should be dismissed to reduce computation time.
-
-for (j in 1:amountofconstraints) 
+  # One simulation = One unconstrained draw (i.e., could include games that are disallowed)
+  # Draw 8 home teams, draw 8 away teams, and then put in zero's where the constraints are (these zeroes will be replaced soon)
+  draw[k,] <- c(sample(hometeams,nrgames,replace=F),sample(awayteams,nrgames,replace=F),numeric(amountofconstraints+nrgames))
+  violation_already <- 0 # Later we will go through each of the constraints. As soon as one is violated, there is no need to check the other constraints.
+  
+  for (j in 1:amountofconstraints) 
   {  # go through each constraint
-  if (violation_already == 0) {     # as long as there is not already a violation 
-    for (i in 1:nrgames){     # go through each game in the draw
-      if (draw[k,i] == constraints[j,1] & draw[k,i+nrgames] == constraints[j,2]) # check whether a game is disallowed
+    if (violation_already == 0) {     # as long as there is not already a violation 
+      for (i in 1:nrgames){     # go through each game in the draw
+        if (draw[k,i] == constraints[j,1] & draw[k,i+nrgames] == constraints[j,2]) # check whether a game is disallowed
         {
-        draw[k,nrgames*2+j] <- 1 # if constraint j is violated
-        violation_already <- 1
+          draw[k,nrgames*2+j] <- 1 # if constraint j is violated
+          violation_already <- 1
         } 
       }
     }
   }
-
-for (l in 1:nrgames)  {                               # go through each home team and check who is the opponent
- opponent <- which(draw[k,]==hometeams[l]) + nrgames  # who is home team l's opponent?
- correctcolumn <- nrgames*2+amountofconstraints+l     # what is home team l's column?
- draw[k,correctcolumn] <- draw[k,opponent]                  # keep track of home team l's opponent in correct column
-}
-
-violations <- sum(as.numeric(draw[k,firstconstraintcolumn:lastconstraintcolumn])) # any violations?
-if(violations==0){k <- k+1} # only if no violations, go on with next simulation
-totalamountofsimulations <- totalamountofsimulations + 1 # keep track of how many good+bad simulations are necessary to get the desired amount of good simulations
-
+  
+  for (l in 1:nrgames)  {                               # go through each home team and check who is the opponent
+    opponent <- which(draw[k,]==hometeams[l]) + nrgames  # in which column can I find hometeam l's opponent
+    correctcolumn <- nrgames*2+amountofconstraints+l     # in which column should I put hometeam l's opponent
+    draw[k,correctcolumn] <- draw[k,opponent]            # put hometeam l's opponent in the correct column
+  }
+  
+  violations <- sum(as.numeric(draw[k,firstconstraintcolumn:lastconstraintcolumn])) # any violations?
+  if(violations==0){k <- k+1} # only if no violations, go on with next simulation ; if violation, redo k
+  totalamountofsimulations <- totalamountofsimulations + 1 # keep track of how many good+bad simulations are necessary to get the desired amount of good simulations
+  
 }
 
 # simulation done. get probabilities now ----------------------------------
@@ -83,7 +84,7 @@ for (i in 1:nrgames)   # for each home team
 {
   for (k in 1:nrgames) # for each away team
   {
-probabilities[k,i] <- length(which(draw[,nrgames*2+amountofconstraints+i]==awayteams[k]))/simulations*100
+    probabilities[k,i] <- length(which(draw[,nrgames*2+amountofconstraints+i]==awayteams[k]))/simulations*100
   }
 }
 
